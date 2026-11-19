@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mes dépenses</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#eef1f4;--card:#fff;--ink:#12212b;--mute:#5d6e7a;--line:#d9e0e6;--main:#0f4c5c;--on:#fff;--acc:#e09f3e;--bad:#b23a48;--bar:#c4d3dc;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e161c;--card:#16222b;--ink:#e8eef2;--mute:#92a4b0;--line:#26363f;--main:#5fb3c6;--on:#0e161c;--acc:#e8b05a;--bad:#e07a86;--bar:#2c4350}}
+:root[data-theme="dark"]{--bg:#0e161c;--card:#16222b;--ink:#e8eef2;--mute:#92a4b0;--line:#26363f;--main:#5fb3c6;--on:#0e161c;--acc:#e8b05a;--bad:#e07a86;--bar:#2c4350}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.45 Figtree,system-ui,sans-serif}
+.w{max-width:760px;margin:0 auto;padding:16px}
+h1,.big,.num{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.nav h1{font-size:20px;margin:0;text-transform:capitalize}
+button{font:inherit;cursor:pointer;color:inherit}
+.ic{border:1px solid var(--line);background:var(--card);border-radius:10px;width:40px;height:40px;font-size:18px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--main);outline-offset:2px}
+.big{font-size:44px;font-weight:700;line-height:1.05;letter-spacing:-.02em}
+.big small{font-size:18px;font-weight:500;color:var(--mute);margin-left:6px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;color:var(--mute);margin-top:8px}
+.prog{height:10px;background:var(--bar);border-radius:6px;overflow:hidden;margin:12px 0 6px}
+.prog i{display:block;height:100%;background:var(--main);border-radius:6px}
+.prog.over i{background:var(--bad)}
+.bud{display:flex;gap:8px;align-items:center;color:var(--mute)}
+.bud input{width:110px}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+.days{display:flex;align-items:flex-end;gap:2px;height:84px;margin-top:4px}
+.days button{flex:1;height:100%;display:flex;align-items:flex-end;background:none;border:0;padding:0}
+.days i{display:block;width:100%;min-height:3px;background:var(--bar);border-radius:3px 3px 0 0}
+.days .t i{background:var(--acc)}
+.days .s i{background:var(--main)}
+.ax{display:flex;justify-content:space-between;color:var(--mute);font-size:12px;margin-top:4px}
+.add{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.add .f{grid-column:1/-1}
+.add label{display:flex;flex-direction:column;gap:4px;color:var(--mute);font-size:13px}
+.go{background:var(--main);color:var(--on);border:0;border-radius:10px;padding:12px;font-weight:600}
+.cat{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;margin:8px 0}
+.cat .prog{margin:0;height:8px}
+.cat span:last-child{font-variant-numeric:tabular-nums}
+h2{font:600 16px "Bricolage Grotesque",Figtree,sans-serif;margin:0 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+h2 span{color:var(--mute);font:400 14px Figtree,sans-serif}
+.day{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
+.day:first-of-type{border:0;padding:0;margin:0}
+.day h3{margin:0 0 4px;font-size:14px;display:flex;justify-content:space-between;text-transform:capitalize}
+.it{display:flex;gap:10px;align-items:center;padding:6px 0}
+.it div{flex:1;min-width:0}
+.it b{font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis}
+.it small{color:var(--mute)}
+.it .a{font-weight:600;font-variant-numeric:tabular-nums}
+.del{border:0;background:none;color:var(--mute);font-size:18px;width:32px;height:32px}
+.empty{color:var(--mute);padding:8px 0}
+.lnk{background:none;border:0;color:var(--main);font-weight:600;padding:0}
+@media (min-width:600px){.add{grid-template-columns:1fr 1fr 1fr 1fr}.add .f{grid-column:auto}.add .go{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="nav">
+    <button class="ic" data-a="prev" aria-label="Mois précédent">‹</button>
+    <h1 id="mo"></h1>
+    <button class="ic" data-a="next" aria-label="Mois suivant">›</button>
+  </div>
+
+  <div class="card">
+    <div class="big num"><span id="tot">0</span><small>DA</small></div>
+    <div class="prog" id="pg"><i style="width:0"></i></div>
+    <div class="row">
+      <span id="rest"></span>
+      <label class="bud">Budget du mois <input id="bud" type="number" inputmode="decimal" min="0" placeholder="0"></label>
+    </div>
+    <div class="row"><span id="avg"></span><span id="cnt"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>Jour par jour <span id="selinfo"></span></h2>
+    <div class="days" id="days"></div>
+    <div class="ax"><span>1</span><span id="mid"></span><span id="end"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>Ajouter une dépense</h2>
+    <div class="add">
+      <label>Montant (DA)<input id="a" type="number" inputmode="decimal" min="0" placeholder="350"></label>
+      <label>Catégorie<select id="c"></select></label>
+      <label>Date<input id="d" type="date"></label>
+      <label class="f">Note<input id="n" type="text" maxlength="80" placeholder="Pain, café, parking…"></label>
+      <button class="go" data-a="add">Ajouter</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Par catégorie <span id="cmo"></span></h2>
+    <div id="cats"></div>
+  </div>
+
+  <div class="card">
+    <h2>Dépenses <span><button class="lnk" id="clr" data-a="clr" hidden>Tout afficher</button> <button class="lnk" id="exp" data-a="exp" hidden>Exporter en CSV</button></span></h2>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+const CATS=["Alimentation","Restaurant","Café / thé","Télécom","Transport","Hygiène / santé","Loisirs","Sport","Crédit","Autre"];
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const fmt=n=>(Math.round(n*100)/100).toLocaleString("fr-FR",{maximumFractionDigits:2});
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let S={items:[],budget:0}, ym=iso(new Date()).slice(0,7), sel=null, ref=null, dl=null;
+
+$("c").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
+$("d").value=iso(new Date());
+
+function save(){
+  try{localStorage.setItem("depenses",JSON.stringify(S))}catch(e){}
+  if(ref){ref.set(S).catch(()=>{})}
+}
+async function load(){
+  try{const l=localStorage.getItem("depenses");if(l){S=JSON.parse(l)}}catch(e){}
+  render();
+  try{
+    const [db,user,d]=await Promise.all([claude.use("db"),claude.use("user"),claude.use("downloads")]);
+    dl=d; render();
+    if(db&&user){
+      const id=await user.id();
+      if(id){
+        ref=db.collection("data/users/"+id).doc("ledger");
+        const s=await ref.get();
+        if(s.exists&&s.data()&&Array.isArray(s.data().items)){S=s.data();try{localStorage.setItem("depenses",JSON.stringify(S))}catch(e){}render()}
+        else if(S.items.length){save()}
+      }
+    }
+  }catch(e){}
+}
+
+function render(){
+  const [y,m]=ym.split("-").map(Number), nd=new Date(y,m,0).getDate();
+  $("mo").textContent=new Date(y,m-1,1).toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+  const mi=S.items.filter(i=>i.d.startsWith(ym));
+  const tot=mi.reduce((s,i)=>s+i.a,0);
+  $("tot").textContent=fmt(tot);
+  const b=Number(S.budget)||0;
+  $("bud").value=b||"";
+  const pg=$("pg"); pg.className="prog"+(b&&tot>b?" over":"");
+  pg.firstElementChild.style.width=(b?Math.min(100,tot/b*100):0)+"%";
+  $("rest").textContent=b?(tot>b?"Dépassement de "+fmt(tot-b)+" DA":"Reste "+fmt(b-tot)+" DA"):"Définissez un budget pour suivre votre reste";
+  const today=iso(new Date()), cur=today.startsWith(ym);
+  const elapsed=cur?new Date().getDate():nd;
+  $("avg").textContent="Moyenne : "+fmt(tot/elapsed)+" DA par jour";
+  $("cnt").textContent=mi.length+(mi.length>1?" dépenses":" dépense");
+
+  const per=Array(nd+1).fill(0); mi.forEach(i=>per[+i.d.slice(8)]+=i.a);
+  const mx=Math.max(1,...per);
+  let h="";
+  for(let k=1;k<=nd;k++){
+    const dd=ym+"-"+pad(k), cls=(dd===sel?"s":dd===today?"t":"");
+    h+=`<button class="${cls}" data-a="day" data-d="${dd}" title="${k} : ${fmt(per[k])} DA" aria-label="${k} : ${fmt(per[k])} DA"><i style="height:${per[k]/mx*100}%"></i></button>`;
+  }
+  $("days").innerHTML=h; $("mid").textContent=Math.ceil(nd/2); $("end").textContent=nd;
+  $("selinfo").textContent=sel?"Jour sélectionné : "+Number(sel.slice(8)):"Touchez une barre pour filtrer";
+
+  const bc={}; mi.forEach(i=>bc[i.c]=(bc[i.c]||0)+i.a);
+  const ce=Object.entries(bc).sort((a,b)=>b[1]-a[1]);
+  $("cmo").textContent="";
+  $("cats").innerHTML=ce.length?ce.map(([c,v])=>`<div class="cat"><span>${esc(c)}</span><div class="prog"><i style="width:${v/tot*100}%"></i></div><span>${fmt(v)}</span></div>`).join(""):'<div class="empty">Rien à afficher pour ce mois.</div>';
+
+  const li=mi.filter(i=>!sel||i.d===sel).sort((a,b)=>b.d.localeCompare(a.d)||b.id-a.id);
+  const g={}; li.forEach(i=>(g[i.d]=g[i.d]||[]).push(i));
+  $("list").innerHTML=li.length?Object.keys(g).map(d=>{
+    const t=g[d].reduce((s,i)=>s+i.a,0);
+    const [yy,mm,dd]=d.split("-").map(Number);
+    return `<div class="day"><h3><span>${new Date(yy,mm-1,dd).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}</span><span class="num">${fmt(t)} DA</span></h3>`+
+      g[d].map(i=>`<div class="it"><div><b>${esc(i.n||i.c)}</b><small>${esc(i.c)}</small></div><span class="a">${fmt(i.a)} DA</span><button class="del" data-a="del" data-id="${i.id}" aria-label="Supprimer">×</button></div>`).join("")+"</div>";
+  }).join(""):'<div class="empty">Aucune dépense. Ajoutez la première avec le formulaire ci-dessus.</div>';
+  $("clr").hidden=!sel; $("exp").hidden=!(dl&&mi.length);
+}
+
+function add(){
+  const a=parseFloat($("a").value), d=$("d").value;
+  if(!(a>0)||!d){$("a").focus();return}
+  S.items.push({id:Date.now(),d,a,c:$("c").value,n:$("n").value.trim()});
+  ym=d.slice(0,7); sel=null;
+  $("a").value="";$("n").value="";$("a").focus();
+  save(); render();
+}
+async function exp(){
+  const mi=S.items.filter(i=>i.d.startsWith(ym)).sort((a,b)=>a.d.localeCompare(b.d));
+  const csv="\ufeffDate;Catégorie;Note;Montant (DA)\n"+mi.map(i=>[i.d,i.c,'"'+i.n.replace(/"/g,'""')+'"',String(i.a).replace(".",",")].join(";")).join("\n");
+  try{await dl.save({filename:"depenses-"+ym+".csv",data:csv})}catch(e){}
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-a]"); if(!t)return;
+  const a=t.dataset.a;
+  if(a==="prev"||a==="next"){let [y,m]=ym.split("-").map(Number);m+=a==="next"?1:-1;if(m<1){m=12;y--}if(m>12){m=1;y++}ym=y+"-"+pad(m);sel=null;render()}
+  else if(a==="day"){sel=sel===t.dataset.d?null:t.dataset.d;render()}
+  else if(a==="clr"){sel=null;render()}
+  else if(a==="add")add();
+  else if(a==="exp")exp();
+  else if(a==="del"){S.items=S.items.filter(i=>String(i.id)!==t.dataset.id);save();render()}
+});
+$("bud").addEventListener("change",e=>{S.budget=parseFloat(e.target.value)||0;save();render()});
+["a","n"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")add()}));
+load();
+</script>
+</body>
+</html>
