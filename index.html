@@ -89,6 +89,15 @@ h2 span{color:var(--mute);font:400 14px Figtree,sans-serif}
 .it .a{font-weight:600;font-variant-numeric:tabular-nums}
 .del{border:0;background:none;color:var(--mute);font-size:18px;width:32px;height:32px}
 .empty{color:var(--mute);padding:8px 0}
+.it.ed{flex-wrap:wrap;padding:10px 0}
+.it.ed input,.it.ed select{flex:1 1 120px}
+.it.ed #en{flex:1 1 100%}
+.eb{flex:1 1 100%;display:flex;gap:14px;align-items:center}
+.sig{text-align:center;margin:26px 0 6px;color:var(--mute)}
+.sig i{display:block;width:64px;height:3px;border-radius:2px;margin:0 auto 12px;background:linear-gradient(90deg,#006233 0 45%,var(--acc) 45% 55%,#d21034 55%)}
+.sig p{margin:0;font-size:13px;letter-spacing:.04em}
+.sig b{display:block;margin-top:2px;font:700 17px "Bricolage Grotesque",Figtree,sans-serif;letter-spacing:.02em;color:var(--ink)}
+.sig small{display:block;margin-top:4px;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
 .lnk{background:none;border:0;color:var(--main);font-weight:600;padding:0}
 textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%;min-height:110px;resize:vertical}
 .pv{margin:8px 0}
@@ -177,6 +186,7 @@ textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var
     <h2>Dépenses <span><button class="lnk" id="clr" data-a="clr" hidden>Tout afficher</button> <button class="lnk" id="exp" data-a="exp" hidden>Exporter en CSV</button></span></h2>
     <div id="list"></div>
   </div>
+  <footer class="sig"><i></i><p>Conçu et créé par</p><b>Bachir.K</b><small>Suivi des dépenses · Algérie · 2026</small></footer>
 </div>
 <button class="fab" id="fab" data-a="fab">+ Plusieurs lignes</button>
 
@@ -187,7 +197,12 @@ const pad=n=>String(n).padStart(2,"0");
 const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const fmt=n=>(Math.round(n*100)/100).toLocaleString("fr-FR",{maximumFractionDigits:2});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let editB=false;
+let editB=false, editId=null;
+function rowH(i){
+  if(i.id!==editId)return `<div class="it"><div><b>${esc(i.n||i.c)}</b><small>${esc(i.c)}</small></div><span class="a">${fmt(i.a)} DA</span><button class="del" data-a="edit" data-id="${i.id}" aria-label="Modifier">✎</button><button class="del" data-a="del" data-id="${i.id}" aria-label="Supprimer">×</button></div>`;
+  const [mn,mx]=mrange(), cs=CATS.includes(i.c)?CATS:CATS.concat(i.c);
+  return `<div class="it ed"><input id="en" type="text" maxlength="80" value="${esc(i.n||"")}" placeholder="Nom" aria-label="Nom"><input id="ea" type="number" inputmode="decimal" min="0" value="${i.a}" aria-label="Montant"><select id="ec" aria-label="Catégorie">${cs.map(c=>`<option${c===i.c?" selected":""}>${esc(c)}</option>`).join("")}</select><input id="ed" type="date" min="${mn}" max="${mx}" value="${i.d}" aria-label="Date"><span class="eb"><button class="go sm" data-a="esave" data-id="${i.id}">Enregistrer</button><button class="lnk" data-a="ecancel">Annuler</button></span></div>`;
+}
 function getBudget(k){const B=S.budgets||{};if(B[k]!=null)return Number(B[k])||0;const ks=Object.keys(B).filter(x=>x<k).sort();return ks.length?Number(B[ks[ks.length-1]])||0:(Number(S.budget)||0)}
 let S={items:[],budget:0,budgets:{}}, ym=iso(new Date()).slice(0,7), sel=null, ref=null, dl=null;
 
@@ -262,7 +277,7 @@ function render(){
     const t=g[d].reduce((s,i)=>s+i.a,0);
     const [yy,mm,dd]=d.split("-").map(Number);
     return `<div class="day"><h3><span>${new Date(yy,mm-1,dd).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}</span><span class="num">${fmt(t)} DA</span></h3>`+
-      g[d].map(i=>`<div class="it"><div><b>${esc(i.n||i.c)}</b><small>${esc(i.c)}</small></div><span class="a">${fmt(i.a)} DA</span><button class="del" data-a="del" data-id="${i.id}" aria-label="Supprimer">×</button></div>`).join("")+"</div>";
+      g[d].map(rowH).join("")+"</div>";
   }).join(""):'<div class="empty">Aucune dépense. Ajoutez la première avec le formulaire ci-dessus.</div>';
   $("clr").hidden=!sel; $("exp").hidden=!(dl&&mi.length);
 }
@@ -322,7 +337,7 @@ async function exp(){
 document.addEventListener("click",e=>{
   const t=e.target.closest("[data-a]"); if(!t)return;
   const a=t.dataset.a;
-  if(a==="prev"||a==="next"){let [y,m]=ym.split("-").map(Number);m+=a==="next"?1:-1;if(m<1){m=12;y--}if(m>12){m=1;y++}ym=y+"-"+pad(m);sel=null;editB=false;render()}
+  if(a==="prev"||a==="next"){let [y,m]=ym.split("-").map(Number);m+=a==="next"?1:-1;if(m<1){m=12;y--}if(m>12){m=1;y++}ym=y+"-"+pad(m);sel=null;editB=false;editId=null;render()}
   else if(a==="day"){sel=sel===t.dataset.d?null:t.dataset.d;render()}
   else if(a==="clr"){sel=null;render()}
   else if(a==="add")add();
@@ -331,10 +346,19 @@ document.addEventListener("click",e=>{
   else if(a==="eb"){editB=true;$("bud").value=getBudget(ym)||"";render();$("bud").focus()}
   else if(a==="bs")saveBud();
   else if(a==="bc"){editB=false;render()}
+  else if(a==="edit"){editId=Number(t.dataset.id);render();const n=$("en");if(n)n.focus()}
+  else if(a==="ecancel"){editId=null;render()}
+  else if(a==="esave"){
+    const i=S.items.find(x=>String(x.id)===t.dataset.id), v=parseFloat($("ea").value);
+    if(!(v>0)){$("ea").focus();return}
+    if(i){i.a=v;i.n=$("en").value.trim();i.c=$("ec").value;i.d=clampD($("ed").value)}
+    editId=null;save();render();
+  }
   else if(a==="exp")exp();
   else if(a==="del"){S.items=S.items.filter(i=>String(i.id)!==t.dataset.id);save();render()}
 });
 $("bd").value=iso(new Date());
+document.addEventListener("keydown",e=>{if(editId!==null&&e.target.closest&&e.target.closest(".ed")){if(e.key==="Enter"){const b=document.querySelector('[data-a="esave"]');if(b)b.click()}if(e.key==="Escape"){editId=null;render()}}});
 $("bt").addEventListener("input",pv);
 $("bt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();addAll()}});
 $("pv").addEventListener("change",e=>{const s=e.target.closest("select[data-i]");if(!s)return;const x=LL[+s.dataset.i];x.c=s.value;ov[x.line]=s.value});
