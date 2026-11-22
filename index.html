@@ -94,6 +94,10 @@ h2 span{color:var(--mute);font:400 14px Figtree,sans-serif}
 .it.ed #en{flex:1 1 100%}
 .eb{flex:1 1 100%;display:flex;gap:14px;align-items:center}
 .sig{text-align:center;margin:26px 0 6px;color:var(--mute)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{display:inline-flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 12px;font-size:14px}
+.chip button{border:0;background:none;color:var(--mute);width:24px;height:24px;font-size:16px;padding:0}
+#nc{flex:1 1 160px}
 .sig i{display:block;width:64px;height:3px;border-radius:2px;margin:0 auto 12px;background:linear-gradient(90deg,#006233 0 45%,var(--acc) 45% 55%,#d21034 55%)}
 .sig p{margin:0;font-size:13px;letter-spacing:.04em}
 .sig b{display:block;margin-top:2px;font:700 17px "Bricolage Grotesque",Figtree,sans-serif;letter-spacing:.02em;color:var(--ink)}
@@ -160,8 +164,8 @@ textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var
 
   <div class="card" id="bulk">
     <h2>Ajout rapide <span id="sum"></span></h2>
-    <p class="hint">Une dépense par ligne : description puis montant, par exemple « Pain 40 » ou « Café 40 DA ». Ctrl + Entrée pour tout ajouter.</p>
-    <textarea id="bt" rows="5" placeholder="Pain 40&#10;Café 40&#10;Pneu 4000"></textarea>
+    <p class="hint">Une dépense par ligne : description puis montant, par exemple « Courses supermarché 5150 » ou « Carburant 1000 DA ». Ctrl + Entrée pour tout ajouter.</p>
+    <textarea id="bt" rows="5" placeholder="Courses supermarché 5150&#10;Abonnement internet 2800 DA&#10;Carburant 1000&#10;Déjeuner restaurant 920&#10;Recharge Flexy 1500"></textarea>
     <div class="pv" id="pv"></div>
     <div class="row"><label class="bud">Date <input id="bd" type="date"></label><button class="go" id="all" data-a="addall" disabled>Tout ajouter</button></div>
   </div>
@@ -178,8 +182,14 @@ textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var
   </div>
 
   <div class="card">
-    <h2>Par catégorie <span id="cmo"></span></h2>
+    <h2>Par catégorie <span><span id="cmo"></span><button class="lnk" data-a="mc">Gérer</button></span></h2>
     <div id="cats"></div>
+  </div>
+
+  <div class="card" id="mcat">
+    <h2>Mes catégories <span>Ajoutez ou retirez les vôtres</span></h2>
+    <div class="chips" id="chips"></div>
+    <div class="row"><input id="nc" type="text" maxlength="24" placeholder="Nouvelle catégorie (ex. Famille)"><button class="go sm" data-a="addcat">Ajouter</button></div>
   </div>
 
   <div class="card">
@@ -191,7 +201,8 @@ textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var
 <button class="fab" id="fab" data-a="fab">+ Plusieurs lignes</button>
 
 <script>
-const CATS=["Alimentation","Restaurant","Café / thé","Télécom","Transport","Hygiène / santé","Loisirs","Sport","Crédit","Autre"];
+const DEFC=["Alimentation","Restaurant","Café / thé","Télécom","Transport","Hygiène / santé","Loisirs","Sport","Crédit","Autre"];
+let CATS=DEFC.slice();
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,"0");
 const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
@@ -228,7 +239,7 @@ async function load(){
         const rs=s.exists&&s.data();
         if(rs&&Array.isArray(rs.items)){
           const have=new Set(rs.items.map(i=>i.id)), extra=S.items.filter(i=>!have.has(i.id));
-          S={items:rs.items.concat(extra),budget:rs.budget||0,budgets:Object.assign({},rs.budgets,S.budgets)};
+          S={items:rs.items.concat(extra),budget:rs.budget||0,budgets:Object.assign({},rs.budgets,S.budgets),cats:(S.cats&&S.cats.length)?S.cats:rs.cats};
           save(); render();
         }else if(S.items.length){save()}
       }
@@ -240,6 +251,7 @@ function render(){
   const [y,m]=ym.split("-").map(Number), nd=new Date(y,m,0).getDate();
   $("mo").textContent=new Date(y,m-1,1).toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
   syncDates();
+  applyCats();fillCats();chipsH();
   const mi=S.items.filter(i=>i.d.startsWith(ym));
   const tot=mi.reduce((s,i)=>s+i.a,0);
   $("tot").textContent=fmt(tot);
@@ -284,7 +296,7 @@ function render(){
 
 let LL=[], ov={};
 const KW=[["Crédit",/cr[ée]dit|كريدي|قرض/],["Télécom",/flexy|فليكسي|internet|انترنت|fibre|recharge/],["Transport",/essence|ايسونس|بنزين|parking|باركين|pneu|taxi|train|قطار|carburant|vidange/],["Hygiène / santé",/douche|دوش|brufen|بروفين|pharmac|savon|médic|دواء|shampo/],["Sport",/musculation|sport|gym|قاعة/],["Restaurant",/resto|restaurant|مطعم|pizza|بيتزا|burger|dîner|déjeuner|dejeuner|عشاء|غداء|tacos|sandwich|snack/],["Café / thé",/caf[ée]|قهوة|قهوه|\bth[ée]\b|شاي|\btea\b/],["Loisirs",/gta|jeu|cin[ée]ma|parc|بارك/],["Alimentation",/pain|خبز|lait|حليب|[œo]uf|بيض|yaourt|يوغ|fromage|l[ée]gume|خضار|tomate|طماطم|oignon|بصل|poulet|دجاج|viande|لحم|fruit|\beau\b|ماء|sucre|farine|huile|chips|شيبس|coca|soda|g[âa]teau|قاطو|candy|كاندي|chocolat|شوكو|[ée]pice|كمون|harissa|هريسة|felfel|فلفل|عدس|p[âa]tes|spaghetti|سباغيتي|riz|jouz|kawkaw|courses|salade|سلطة|jus|عصير/]];
-const guess=s=>{s=s.toLowerCase();for(const [c,r] of KW)if(r.test(s))return c;return "Autre"};
+const guess=s=>{s=s.toLowerCase();for(const c of CATS)if(!DEFC.includes(c)&&s.includes(c.toLowerCase()))return c;for(const [c,r] of KW)if(r.test(s)&&CATS.includes(c))return c;return CATS.includes("Autre")?"Autre":CATS[0]};
 function parseLines(t){
   t=t.replace(/[٠-٩]/g,c=>"٠١٢٣٤٥٦٧٨٩".indexOf(c));
   const raw=t.split("\n").map(s=>s.trim()).filter(Boolean), L=[];
@@ -320,6 +332,10 @@ function defD(){const t=iso(new Date());return t.startsWith(ym)?t:ym+"-01"}
 function mrange(){return [ym+"-01",ym+"-"+pad(new Date(+ym.slice(0,4),+ym.slice(5),0).getDate())]}
 function clampD(v){const [mn,mx]=mrange();if(!v)v=defD();return v<mn?mn:v>mx?mx:v}
 function syncDates(){const [mn,mx]=mrange();["d","bd"].forEach(id=>{const e=$(id);e.min=mn;e.max=mx;if(!e.value||e.value<mn||e.value>mx)e.value=defD()})}
+function applyCats(){CATS=(S.cats&&S.cats.length)?S.cats.slice():DEFC.slice()}
+function fillCats(){const c=$("c"),v=c.value;c.innerHTML=CATS.map(x=>`<option>${esc(x)}</option>`).join("");if(CATS.includes(v))c.value=v}
+function chipsH(){$("chips").innerHTML=CATS.map(c=>`<span class="chip">${esc(c)}<button data-a="rmcat" data-c="${esc(c)}" aria-label="Retirer ${esc(c)}">×</button></span>`).join("")}
+function addCat(){const v=$("nc").value.trim();if(!v)return;if(!CATS.some(c=>c.toLowerCase()===v.toLowerCase())){S.cats=CATS.concat(v);save()}$("nc").value="";render()}
 function saveBud(){S.budgets=S.budgets||{};S.budgets[ym]=parseFloat($("bud").value)||0;editB=false;save();render()}
 function add(){
   const a=parseFloat($("a").value), d=clampD($("d").value);
@@ -348,6 +364,9 @@ document.addEventListener("click",e=>{
   else if(a==="bc"){editB=false;render()}
   else if(a==="edit"){editId=Number(t.dataset.id);render();const n=$("en");if(n)n.focus()}
   else if(a==="ecancel"){editId=null;render()}
+  else if(a==="mc"){$("mcat").scrollIntoView({block:"center",behavior:"smooth"});$("nc").focus({preventScroll:true})}
+  else if(a==="addcat")addCat();
+  else if(a==="rmcat"){if(CATS.length>1){S.cats=CATS.filter(c=>c!==t.dataset.c);save();render()}}
   else if(a==="esave"){
     const i=S.items.find(x=>String(x.id)===t.dataset.id), v=parseFloat($("ea").value);
     if(!(v>0)){$("ea").focus();return}
@@ -358,6 +377,7 @@ document.addEventListener("click",e=>{
   else if(a==="del"){S.items=S.items.filter(i=>String(i.id)!==t.dataset.id);save();render()}
 });
 $("bd").value=iso(new Date());
+$("nc").addEventListener("keydown",e=>{if(e.key==="Enter")addCat()});
 document.addEventListener("keydown",e=>{if(editId!==null&&e.target.closest&&e.target.closest(".ed")){if(e.key==="Enter"){const b=document.querySelector('[data-a="esave"]');if(b)b.click()}if(e.key==="Escape"){editId=null;render()}}});
 $("bt").addEventListener("input",pv);
 $("bt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();addAll()}});
