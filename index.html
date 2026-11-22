@@ -224,6 +224,7 @@ async function load(){
 function render(){
   const [y,m]=ym.split("-").map(Number), nd=new Date(y,m,0).getDate();
   $("mo").textContent=new Date(y,m-1,1).toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+  syncDates();
   const mi=S.items.filter(i=>i.d.startsWith(ym));
   const tot=mi.reduce((s,i)=>s+i.a,0);
   $("tot").textContent=fmt(tot);
@@ -296,13 +297,17 @@ function pv(){
 }
 function addAll(){
   const ok=LL.filter(x=>!x.err); if(!ok.length)return;
-  const d=$("bd").value||iso(new Date()); let id=Date.now();
+  const d=clampD($("bd").value); let id=Date.now();
   ok.forEach(x=>S.items.push({id:id++,d,a:x.a,c:x.c,n:x.n}));
   ym=d.slice(0,7); sel=null; ov={}; $("bt").value=""; pv(); save(); render();
 }
+function defD(){const t=iso(new Date());return t.startsWith(ym)?t:ym+"-01"}
+function mrange(){return [ym+"-01",ym+"-"+pad(new Date(+ym.slice(0,4),+ym.slice(5),0).getDate())]}
+function clampD(v){const [mn,mx]=mrange();if(!v)v=defD();return v<mn?mn:v>mx?mx:v}
+function syncDates(){const [mn,mx]=mrange();["d","bd"].forEach(id=>{const e=$(id);e.min=mn;e.max=mx;if(!e.value||e.value<mn||e.value>mx)e.value=defD()})}
 function saveBud(){S.budgets=S.budgets||{};S.budgets[ym]=parseFloat($("bud").value)||0;editB=false;save();render()}
 function add(){
-  const a=parseFloat($("a").value), d=$("d").value;
+  const a=parseFloat($("a").value), d=clampD($("d").value);
   if(!(a>0)||!d){$("a").focus();return}
   S.items.push({id:Date.now(),d,a,c:$("c").value,n:$("n").value.trim()});
   ym=d.slice(0,7); sel=null;
