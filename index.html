@@ -6,16 +6,27 @@
 <title>Mes dépenses</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Figtree:wght@400;500;600&display=swap">
 <style>
-:root{--bg:#eef1f4;--card:#fff;--ink:#12212b;--mute:#5d6e7a;--line:#d9e0e6;--main:#0f4c5c;--on:#fff;--acc:#e09f3e;--bad:#b23a48;--bar:#c4d3dc;
+:root{--bg:#f5faf6;--bg2:#e9f3ec;--card:rgba(255,255,255,.88);--ink:#12261c;--mute:#5b7266;--line:#dbe8df;--main:#006233;--on:#fff;--acc:#b8933f;--bad:#c8102e;--bar:#cfe3d6;--patc:rgba(0,98,51,.09);--patc2:rgba(0,98,51,.26);--note:rgba(255,255,255,.55);
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e161c;--card:#16222b;--ink:#e8eef2;--mute:#92a4b0;--line:#26363f;--main:#5fb3c6;--on:#0e161c;--acc:#e8b05a;--bad:#e07a86;--bar:#2c4350}}
-:root[data-theme="dark"]{--bg:#0e161c;--card:#16222b;--ink:#e8eef2;--mute:#92a4b0;--line:#26363f;--main:#5fb3c6;--on:#0e161c;--acc:#e8b05a;--bad:#e07a86;--bar:#2c4350}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1612;--bg2:#0f1f18;--card:rgba(18,33,26,.88);--ink:#e6f1ea;--mute:#8fa89a;--line:#1f372b;--main:#4fbf86;--on:#08150e;--acc:#d9bc6a;--bad:#ef6b7c;--bar:#25402f;--patc:rgba(120,210,160,.07);--patc2:rgba(120,210,160,.22);--note:rgba(255,255,255,.04)}}
+:root[data-theme="dark"]{--bg:#0b1612;--bg2:#0f1f18;--card:rgba(18,33,26,.88);--ink:#e6f1ea;--mute:#8fa89a;--line:#1f372b;--main:#4fbf86;--on:#08150e;--acc:#d9bc6a;--bad:#ef6b7c;--bar:#25402f;--patc:rgba(120,210,160,.07);--patc2:rgba(120,210,160,.22);--note:rgba(255,255,255,.04)}
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.45 Figtree,system-ui,sans-serif}
-.w{max-width:760px;margin:0 auto;padding:16px 16px 84px}
+body{margin:0;background:var(--bg) linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%) fixed;color:var(--ink);font:400 15px/1.45 Figtree,system-ui,sans-serif;min-height:100vh}
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:5px;z-index:5;background:linear-gradient(90deg,#006233,#0a7a45 38%,#fff 50%,#e0334f 62%,#d21034)}
+.bgp{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.gl{fill:none;stroke:var(--patc);stroke-width:1}
+.gt{font:700 30px Georgia,serif;fill:var(--patc)}
+.n{fill:var(--note);stroke:var(--patc2);stroke-width:1.4}
+.l{fill:none;stroke:var(--patc2);stroke-width:.9}
+.gold{fill:rgba(217,188,106,.35);stroke:var(--acc);stroke-width:1.4}
+.t{fill:var(--patc2);font:700 14px Georgia,serif}
+.cash{position:fixed;width:300px;height:195px;z-index:0;pointer-events:none}
+.cash.tr{top:46px;right:-70px;transform:rotate(8deg)}
+.cash.bl{bottom:-30px;left:-80px;transform:rotate(-12deg)}
+.w{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:20px 16px 84px}
 h1,.big,.num{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.card{background:var(--card);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,60,30,.05),0 10px 26px rgba(0,60,30,.07)}
 .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .nav h1{font-size:20px;margin:0;text-transform:capitalize}
 button{font:inherit;cursor:pointer;color:inherit}
@@ -37,6 +48,19 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 #rest.bad{color:var(--bad);font-weight:600}
 .go.sm{padding:8px 14px}
 .bedit{padding:10px;background:var(--bg);border-radius:10px}
+.hero{background:linear-gradient(135deg,#004d29 0%,#00753f 55%,#0b8a52 100%);color:#fff;border:0;position:relative;overflow:hidden;box-shadow:0 12px 30px rgba(0,98,51,.30)}
+.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 100% 0%,rgba(255,255,255,.16),transparent 55%);pointer-events:none}
+.hero>*{position:relative;z-index:1}
+.hero .lbl,.hero .row{color:rgba(255,255,255,.84)}
+.hero .big small{color:rgba(255,255,255,.75)}
+.hero .lnk{color:#f2e0a3}
+.hero #pg{background:rgba(255,255,255,.22)}
+.hero #pg .ok{background:#f0dc9a}
+.hero #pg .ex{background:#ff5a6e}
+.hero #rest.bad{color:#ffd9de}
+.hero .badge{background:#d21034;color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.85)}
+.hero .bedit{background:var(--bg);color:var(--mute)}
+.hero .bedit .lnk{color:var(--main)}
 .bud{display:flex;gap:8px;align-items:center;color:var(--mute)}
 .bud input{width:110px}
 input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
@@ -78,6 +102,22 @@ textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var
 </style>
 </head>
 <body>
+<svg class="bgp" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="gp" width="260" height="150" patternUnits="userSpaceOnUse">
+      <g class="gl"><path d="M0 20Q32 0 65 20T130 20T195 20T260 20"/><path d="M0 30Q32 10 65 30T130 30T195 30T260 30"/><path d="M0 40Q32 20 65 40T130 40T195 40T260 40"/><circle cx="195" cy="100" r="34"/><circle cx="195" cy="100" r="26"/><circle cx="195" cy="100" r="18"/><circle cx="195" cy="100" r="10"/><path d="M0 110Q32 90 65 110T130 110"/><path d="M0 120Q32 100 65 120T130 120"/></g>
+      <text x="30" y="92" class="gt">1000</text>
+    </pattern>
+    <g id="cash">
+      <g transform="rotate(7 120 75)"><rect class="n" x="52" y="40" width="150" height="82" rx="8"/><rect class="l" x="60" y="48" width="134" height="66" rx="5"/><circle class="l" cx="127" cy="81" r="21"/><circle class="l" cx="127" cy="81" r="13"/><path class="l" d="M68 100q14-12 28 0t28 0"/><text class="t" x="158" y="70">200</text></g>
+      <g transform="rotate(-9 110 70)"><rect class="n" x="18" y="14" width="150" height="82" rx="8"/><rect class="l" x="26" y="22" width="134" height="66" rx="5"/><circle class="l" cx="93" cy="55" r="21"/><circle class="l" cx="93" cy="55" r="13"/><path class="l" d="M34 74q14-12 28 0t28 0"/><text class="t" x="122" y="44">1000</text></g>
+      <circle class="gold" cx="190" cy="118" r="22"/><circle class="l" cx="190" cy="118" r="16"/><text class="t" x="190" y="123" text-anchor="middle">DA</text>
+    </g>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#gp)"/>
+</svg>
+<svg class="cash tr" viewBox="0 0 230 150" aria-hidden="true"><use href="#cash"/></svg>
+<svg class="cash bl" viewBox="0 0 230 150" aria-hidden="true"><use href="#cash"/></svg>
 <div class="w">
   <div class="nav">
     <button class="ic" data-a="prev" aria-label="Mois précédent">‹</button>
@@ -85,7 +125,7 @@ textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var
     <button class="ic" data-a="next" aria-label="Mois suivant">›</button>
   </div>
 
-  <div class="card">
+  <div class="card hero">
     <div class="lbl">Dépensé ce mois</div>
     <div class="top">
       <div class="big num"><span id="tot">0</span><small>DA</small></div>
