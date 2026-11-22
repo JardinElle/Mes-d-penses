@@ -13,7 +13,7 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.45 Figtree,system-ui,sans-serif}
-.w{max-width:760px;margin:0 auto;padding:16px}
+.w{max-width:760px;margin:0 auto;padding:16px 16px 84px}
 h1,.big,.num{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
 .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -26,7 +26,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;color:var(--mute);margin-top:8px}
 .prog{height:10px;background:var(--bar);border-radius:6px;overflow:hidden;margin:12px 0 6px}
 .prog i{display:block;height:100%;background:var(--main);border-radius:6px}
-.prog.over i{background:var(--bad)}
+[hidden]{display:none!important}
+.lbl{color:var(--mute);font-size:13px;margin-bottom:2px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.badge{background:var(--bad);color:var(--on);border-radius:999px;padding:5px 12px;font-weight:600;font-size:14px}
+#pg{display:flex;height:12px}
+#pg i{border-radius:0;height:100%}
+#pg .ok{background:var(--main)}
+#pg .ex{background:var(--bad)}
+#rest.bad{color:var(--bad);font-weight:600}
+.go.sm{padding:8px 14px}
+.bedit{padding:10px;background:var(--bg);border-radius:10px}
 .bud{display:flex;gap:8px;align-items:center;color:var(--mute)}
 .bud input{width:110px}
 input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
@@ -56,6 +66,14 @@ h2 span{color:var(--mute);font:400 14px Figtree,sans-serif}
 .del{border:0;background:none;color:var(--mute);font-size:18px;width:32px;height:32px}
 .empty{color:var(--mute);padding:8px 0}
 .lnk{background:none;border:0;color:var(--main);font-weight:600;padding:0}
+textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%;min-height:110px;resize:vertical}
+.pv{margin:8px 0}
+.pv .it{border-top:1px solid var(--line)}
+.pv select{padding:6px;max-width:150px}
+.bad b,.bad small{color:var(--bad)}
+.hint{color:var(--mute);font-size:13px;margin:0 0 8px}
+.go:disabled{opacity:.45;cursor:default}
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--main);color:var(--on);border:0;border-radius:999px;padding:12px 18px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 @media (min-width:600px){.add{grid-template-columns:1fr 1fr 1fr 1fr}.add .f{grid-column:auto}.add .go{grid-column:1/-1}}
 </style>
 </head>
@@ -68,11 +86,19 @@ h2 span{color:var(--mute);font:400 14px Figtree,sans-serif}
   </div>
 
   <div class="card">
-    <div class="big num"><span id="tot">0</span><small>DA</small></div>
-    <div class="prog" id="pg"><i style="width:0"></i></div>
+    <div class="lbl">Dépensé ce mois</div>
+    <div class="top">
+      <div class="big num"><span id="tot">0</span><small>DA</small></div>
+      <span class="badge" id="over" hidden></span>
+    </div>
+    <div class="prog" id="pg"><i class="ok" style="width:0"></i><i class="ex" style="width:0"></i></div>
     <div class="row">
       <span id="rest"></span>
-      <label class="bud">Budget du mois <input id="bud" type="number" inputmode="decimal" min="0" placeholder="0"></label>
+      <span class="bud">Budget du mois <button class="lnk" id="ebtn" data-a="eb">Définir</button></span>
+    </div>
+    <div class="row bedit" id="be" hidden>
+      <label class="bud">Budget de <span id="bm"></span> <input id="bud" type="number" inputmode="decimal" min="0" placeholder="50000"> DA</label>
+      <span><button class="go sm" data-a="bs">Enregistrer</button> <button class="lnk" data-a="bc">Annuler</button></span>
     </div>
     <div class="row"><span id="avg"></span><span id="cnt"></span></div>
   </div>
@@ -81,6 +107,14 @@ h2 span{color:var(--mute);font:400 14px Figtree,sans-serif}
     <h2>Jour par jour <span id="selinfo"></span></h2>
     <div class="days" id="days"></div>
     <div class="ax"><span>1</span><span id="mid"></span><span id="end"></span></div>
+  </div>
+
+  <div class="card" id="bulk">
+    <h2>Ajout rapide <span id="sum"></span></h2>
+    <p class="hint">Une dépense par ligne : description puis montant, par exemple « Pain 40 » ou « Café 40 DA ». Ctrl + Entrée pour tout ajouter.</p>
+    <textarea id="bt" rows="5" placeholder="Pain 40&#10;Café 40&#10;Pneu 4000"></textarea>
+    <div class="pv" id="pv"></div>
+    <div class="row"><label class="bud">Date <input id="bd" type="date"></label><button class="go" id="all" data-a="addall" disabled>Tout ajouter</button></div>
   </div>
 
   <div class="card">
@@ -104,6 +138,7 @@ h2 span{color:var(--mute);font:400 14px Figtree,sans-serif}
     <div id="list"></div>
   </div>
 </div>
+<button class="fab" id="fab" data-a="fab">+ Plusieurs lignes</button>
 
 <script>
 const CATS=["Alimentation","Restaurant","Café / thé","Télécom","Transport","Hygiène / santé","Loisirs","Sport","Crédit","Autre"];
@@ -112,7 +147,9 @@ const pad=n=>String(n).padStart(2,"0");
 const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const fmt=n=>(Math.round(n*100)/100).toLocaleString("fr-FR",{maximumFractionDigits:2});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let S={items:[],budget:0}, ym=iso(new Date()).slice(0,7), sel=null, ref=null, dl=null;
+let editB=false;
+function getBudget(k){const B=S.budgets||{};if(B[k]!=null)return Number(B[k])||0;const ks=Object.keys(B).filter(x=>x<k).sort();return ks.length?Number(B[ks[ks.length-1]])||0:(Number(S.budget)||0)}
+let S={items:[],budget:0,budgets:{}}, ym=iso(new Date()).slice(0,7), sel=null, ref=null, dl=null;
 
 $("c").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
 $("d").value=iso(new Date());
@@ -125,15 +162,20 @@ async function load(){
   try{const l=localStorage.getItem("depenses");if(l){S=JSON.parse(l)}}catch(e){}
   render();
   try{
-    const [db,user,d]=await Promise.all([claude.use("db"),claude.use("user"),claude.use("downloads")]);
+    const g=n=>claude.use(n).catch(()=>null);
+    const [db,user,d]=await Promise.all([g("db"),g("user"),g("downloads")]);
     dl=d; render();
     if(db&&user){
       const id=await user.id();
       if(id){
         ref=db.collection("data/users/"+id).doc("ledger");
         const s=await ref.get();
-        if(s.exists&&s.data()&&Array.isArray(s.data().items)){S=s.data();try{localStorage.setItem("depenses",JSON.stringify(S))}catch(e){}render()}
-        else if(S.items.length){save()}
+        const rs=s.exists&&s.data();
+        if(rs&&Array.isArray(rs.items)){
+          const have=new Set(rs.items.map(i=>i.id)), extra=S.items.filter(i=>!have.has(i.id));
+          S={items:rs.items.concat(extra),budget:rs.budget||0,budgets:Object.assign({},rs.budgets,S.budgets)};
+          save(); render();
+        }else if(S.items.length){save()}
       }
     }
   }catch(e){}
@@ -145,11 +187,14 @@ function render(){
   const mi=S.items.filter(i=>i.d.startsWith(ym));
   const tot=mi.reduce((s,i)=>s+i.a,0);
   $("tot").textContent=fmt(tot);
-  const b=Number(S.budget)||0;
-  $("bud").value=b||"";
-  const pg=$("pg"); pg.className="prog"+(b&&tot>b?" over":"");
-  pg.firstElementChild.style.width=(b?Math.min(100,tot/b*100):0)+"%";
-  $("rest").textContent=b?(tot>b?"Dépassement de "+fmt(tot-b)+" DA":"Reste "+fmt(b-tot)+" DA"):"Définissez un budget pour suivre votre reste";
+  const b=getBudget(ym), ex=b&&tot>b?tot-b:0, pg=$("pg");
+  pg.children[0].style.width=(b?(ex?b/tot*100:Math.min(100,tot/b*100)):0)+"%";
+  pg.children[1].style.width=(ex?ex/tot*100:0)+"%";
+  $("over").hidden=!ex; $("over").textContent="+ "+fmt(ex)+" DA de dépassement";
+  $("rest").textContent=b?(ex?"Budget de "+fmt(b)+" DA dépassé":"Reste "+fmt(b-tot)+" DA sur "+fmt(b)+" DA"):"Aucun budget défini pour ce mois";
+  $("rest").className=ex?"bad":"";
+  $("ebtn").textContent=b?"Modifier":"Définir";
+  $("be").hidden=!editB; $("bm").textContent=new Date(y,m-1,1).toLocaleDateString("fr-FR",{month:"long"});
   const today=iso(new Date()), cur=today.startsWith(ym);
   const elapsed=cur?new Date().getDate():nd;
   $("avg").textContent="Moyenne : "+fmt(tot/elapsed)+" DA par jour";
@@ -181,6 +226,41 @@ function render(){
   $("clr").hidden=!sel; $("exp").hidden=!(dl&&mi.length);
 }
 
+let LL=[], ov={};
+const KW=[["Crédit",/cr[ée]dit|كريدي|قرض/],["Télécom",/flexy|فليكسي|internet|انترنت|fibre|recharge/],["Transport",/essence|ايسونس|بنزين|parking|باركين|pneu|taxi|train|قطار|carburant|vidange/],["Hygiène / santé",/douche|دوش|brufen|بروفين|pharmac|savon|médic|دواء|shampo/],["Sport",/musculation|sport|gym|قاعة/],["Restaurant",/resto|restaurant|مطعم|pizza|بيتزا|burger|dîner|déjeuner|dejeuner|عشاء|غداء|tacos|sandwich|snack/],["Café / thé",/caf[ée]|قهوة|قهوه|\bth[ée]\b|شاي|\btea\b/],["Loisirs",/gta|jeu|cin[ée]ma|parc|بارك/],["Alimentation",/pain|خبز|lait|حليب|[œo]uf|بيض|yaourt|يوغ|fromage|l[ée]gume|خضار|tomate|طماطم|oignon|بصل|poulet|دجاج|viande|لحم|fruit|\beau\b|ماء|sucre|farine|huile|chips|شيبس|coca|soda|g[âa]teau|قاطو|candy|كاندي|chocolat|شوكو|[ée]pice|كمون|harissa|هريسة|felfel|فلفل|عدس|p[âa]tes|spaghetti|سباغيتي|riz|jouz|kawkaw|courses|salade|سلطة|jus|عصير/]];
+const guess=s=>{s=s.toLowerCase();for(const [c,r] of KW)if(r.test(s))return c;return "Autre"};
+function parseLines(t){
+  t=t.replace(/[٠-٩]/g,c=>"٠١٢٣٤٥٦٧٨٩".indexOf(c));
+  const raw=t.split("\n").map(s=>s.trim()).filter(Boolean), L=[];
+  for(let i=0;i<raw.length;i++){
+    let s=raw[i];
+    if(!/\d/.test(s)&&raw[i+1]&&/^\d+(?:[.,]\d+)?\s*(?:دج|da|dzd)?$/i.test(raw[i+1])){s+=" "+raw[++i]}
+    const r1=/(\d+(?:[.,]\d+)?)\s*(?:دج|دينار|dzd|da|dinars?)(?![a-zA-Z\u0600-\u06FF])/gi;
+    let m,last=null;
+    while((m=r1.exec(s)))last=m;
+    if(!last){const r2=/\d+(?:[.,]\d+)?/g;while((m=r2.exec(s)))last=m}
+    if(!last){L.push({line:s,err:true});continue}
+    const a=parseFloat(last[1]||last[0]);
+    let n=(s.slice(0,last.index)+" "+s.slice(last.index+last[0].length)).replace(/\s+/g," ").replace(/^[\s\-–:,;\/]+|[\s\-–:,;\/]+$/g,"");
+    L.push({line:s,n,a,c:ov[s]||guess(n)});
+  }
+  return L;
+}
+function pv(){
+  LL=parseLines($("bt").value);
+  const ok=LL.filter(x=>!x.err), tot=ok.reduce((s,x)=>s+x.a,0);
+  $("pv").innerHTML=LL.map((x,i)=>x.err?`<div class="it bad"><div><b>${esc(x.line)}</b><small>Montant introuvable : ligne ignorée</small></div></div>`:`<div class="it"><div><b>${esc(x.n||x.c)}</b></div><select data-i="${i}" aria-label="Catégorie">${CATS.map(c=>`<option${c===x.c?" selected":""}>${c}</option>`).join("")}</select><span class="a">${fmt(x.a)} DA</span></div>`).join("");
+  $("sum").textContent=ok.length?ok.length+(ok.length>1?" lignes":" ligne")+" · "+fmt(tot)+" DA":"";
+  $("all").disabled=!ok.length;
+  $("fab").textContent=ok.length?"Tout ajouter ("+ok.length+") · "+fmt(tot)+" DA":"+ Plusieurs lignes";
+}
+function addAll(){
+  const ok=LL.filter(x=>!x.err); if(!ok.length)return;
+  const d=$("bd").value||iso(new Date()); let id=Date.now();
+  ok.forEach(x=>S.items.push({id:id++,d,a:x.a,c:x.c,n:x.n}));
+  ym=d.slice(0,7); sel=null; ov={}; $("bt").value=""; pv(); save(); render();
+}
+function saveBud(){S.budgets=S.budgets||{};S.budgets[ym]=parseFloat($("bud").value)||0;editB=false;save();render()}
 function add(){
   const a=parseFloat($("a").value), d=$("d").value;
   if(!(a>0)||!d){$("a").focus();return}
@@ -197,14 +277,23 @@ async function exp(){
 document.addEventListener("click",e=>{
   const t=e.target.closest("[data-a]"); if(!t)return;
   const a=t.dataset.a;
-  if(a==="prev"||a==="next"){let [y,m]=ym.split("-").map(Number);m+=a==="next"?1:-1;if(m<1){m=12;y--}if(m>12){m=1;y++}ym=y+"-"+pad(m);sel=null;render()}
+  if(a==="prev"||a==="next"){let [y,m]=ym.split("-").map(Number);m+=a==="next"?1:-1;if(m<1){m=12;y--}if(m>12){m=1;y++}ym=y+"-"+pad(m);sel=null;editB=false;render()}
   else if(a==="day"){sel=sel===t.dataset.d?null:t.dataset.d;render()}
   else if(a==="clr"){sel=null;render()}
   else if(a==="add")add();
+  else if(a==="addall")addAll();
+  else if(a==="fab"){if(LL.some(x=>!x.err))addAll();else{$("bulk").scrollIntoView({block:"center",behavior:"smooth"});$("bt").focus({preventScroll:true})}}
+  else if(a==="eb"){editB=true;$("bud").value=getBudget(ym)||"";render();$("bud").focus()}
+  else if(a==="bs")saveBud();
+  else if(a==="bc"){editB=false;render()}
   else if(a==="exp")exp();
   else if(a==="del"){S.items=S.items.filter(i=>String(i.id)!==t.dataset.id);save();render()}
 });
-$("bud").addEventListener("change",e=>{S.budget=parseFloat(e.target.value)||0;save();render()});
+$("bd").value=iso(new Date());
+$("bt").addEventListener("input",pv);
+$("bt").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();addAll()}});
+$("pv").addEventListener("change",e=>{const s=e.target.closest("select[data-i]");if(!s)return;const x=LL[+s.dataset.i];x.c=s.value;ov[x.line]=s.value});
+$("bud").addEventListener("keydown",e=>{if(e.key==="Enter")saveBud();if(e.key==="Escape"){editB=false;render()}});
 ["a","n"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")add()}));
 load();
 </script>
